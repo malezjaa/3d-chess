@@ -75,16 +75,36 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
   }, [gameState])
 
   useEffect(() => {
-    if (!controlsRef.current) {
-      return
-    }
+    if (!controlsRef.current) return;
 
-    const azimuth = turn === 'white' ? Math.PI : 0
-    controlsRef.current.minAzimuthAngle = azimuth
-    controlsRef.current.maxAzimuthAngle = azimuth
-    controlsRef.current.setAzimuthalAngle(azimuth)
-    controlsRef.current.update()
-  }, [turn])
+    const controls = controlsRef.current;
+    const target = turn === 'white' ? Math.PI : 0;
+    let animFrameId: number;
+
+    controls.minAzimuthAngle = -Infinity;
+    controls.maxAzimuthAngle = Infinity;
+
+    const animate = () => {
+      const current = controls.getAzimuthalAngle();
+      let delta = target - current;
+      while (delta > Math.PI) delta -= Math.PI * 2;
+      while (delta < -Math.PI) delta += Math.PI * 2;
+
+      if (Math.abs(delta) < 0.001) {
+        controls.setAzimuthalAngle(target);
+        controls.minAzimuthAngle = controls.maxAzimuthAngle = target;
+        controls.update();
+        return;
+      }
+
+      controls.setAzimuthalAngle(current + delta * 0.12);
+      controls.update();
+      animFrameId = requestAnimationFrame(animate);
+    };
+
+    animFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animFrameId);
+  }, [turn]);
 
   return (
     <>
@@ -118,7 +138,6 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
                 handleSquareClick(p.row, p.col)
                 return
               }
-
               toast.error("Not your turn")
             }}
           />
