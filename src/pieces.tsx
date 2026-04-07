@@ -186,10 +186,11 @@ function PieceWrapper({pos, onClick, onPointerOver, onPointerOut, isSelected, is
   )
 }
 
-export function Piece({config, mats, isSelected, onClick, onPointerOver, onPointerOut,}: {
+export function Piece({config, mats, isSelected, hoverable = true, onClick, onPointerOver, onPointerOut,}: {
   config: PieceConfig
   mats: ReturnType<typeof useMaterials>
   isSelected?: boolean
+  hoverable?: boolean
   onClick?: () => void
   onPointerOver?: () => void
   onPointerOut?: () => void
@@ -224,11 +225,17 @@ export function Piece({config, mats, isSelected, onClick, onPointerOver, onPoint
     <PieceWrapper
       pos={pos}
       onClick={onClick}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
+      onPointerOver={hoverable ? handlePointerOver : undefined}
+      onPointerOut={hoverable ? handlePointerOut : undefined}
       isSelected={isSelected}
-      isHovered={hovered}
+      isHovered={hoverable ? hovered : false}
     >
+      {isSelected ? (
+        <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.36, 0.04, 16, 48]} />
+          <meshStandardMaterial color={'#ffd54f'} emissive={'#ffd54f'} emissiveIntensity={0.6} />
+        </mesh>
+      ) : null}
       {inner}
     </PieceWrapper>
   )

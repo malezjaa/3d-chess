@@ -1,9 +1,10 @@
-import {useMemo, useRef} from 'react'
+import {useEffect, useMemo, useRef} from 'react'
 import {OrbitControls} from '@react-three/drei'
-import * as THREE from 'three'
 import {useMaterials} from './materials'
 import {Piece, type PieceConfig, type PieceType} from './pieces'
 import {GameProvider, useGame} from "./context.tsx";
+import {toast} from "sonner";
+import type {OrbitControls as OrbitControlsImpl} from 'three-stdlib'
 
 function Board({ mats }: { mats: ReturnType<typeof useMaterials> }) {
   const TILE = 1
@@ -33,11 +34,18 @@ function Board({ mats }: { mats: ReturnType<typeof useMaterials> }) {
 
 function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
   const { selectedPiece, setSelectedPiece, game } = useGame()
-  const groupRef = useRef<THREE.Group>(null!)
+  const controlsRef = useRef<OrbitControlsImpl | null>(null)
+  const gameState = game.exportJson()
+  const turn = gameState.turn
+
+  const isSameSquare = (a: PieceConfig | null, b: PieceConfig) => {
+    if (!a) return false
+    return a.col === b.col && a.row === b.row
+  }
 
   const pieces = useMemo(() => {
     const out: PieceConfig[] = []
-    Object.entries(game.exportJson().pieces).forEach(([pos, piece]) => {
+    Object.entries(gameState.pieces).forEach(([pos, piece]) => {
       const type = (piece as string).toUpperCase() as PieceType
       const color = (piece as string).toLowerCase() === piece ? 'black' : 'white'
       const col = pos.charCodeAt(0) - 65
@@ -45,11 +53,24 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
       out.push({ type, color, col, row })
     })
     return out
-  }, [game])
+  }, [gameState])
+
+  useEffect(() => {
+    if (!controlsRef.current) {
+      return
+    }
+
+    const azimuth = turn === 'white' ? Math.PI : 0
+    controlsRef.current.minAzimuthAngle = azimuth
+    controlsRef.current.maxAzimuthAngle = azimuth
+    controlsRef.current.setAzimuthalAngle(azimuth)
+    controlsRef.current.update()
+  }, [turn])
 
   return (
     <>
       <OrbitControls
+        ref={controlsRef}
         enablePan={false}
         minPolarAngle={Math.PI / 6}
         maxPolarAngle={Math.PI / 4}
@@ -57,16 +78,25 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
         maxDistance={20}
         target={[0, 0, 0]}
       />
-      <group ref={groupRef}>
+      <group>
         <Board mats={mats} />
-        {pieces.map((p, i) => (
+        {pieces.map((p) => (
           <Piece
-            key={i}
+            key={`${p.color}-${p.type}-${p.col}-${p.row}`}
             config={p}
             mats={mats}
-            onClick={() => setSelectedPiece(
-              selectedPiece === p ? null : p
-            )}
+            isSelected={isSameSquare(selectedPiece, p)}
+            hoverable={p.color === turn}
+            onClick={() => {
+              if (p.color !== turn) {
+                console.log(p)
+                toast.error("Not your turn")
+              } else {
+                setSelectedPiece(
+                  isSameSquare(selectedPiece, p) ? null : p
+                )
+              }
+            }}
           />
         ))}
       </group>
