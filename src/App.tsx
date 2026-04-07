@@ -1,12 +1,14 @@
-import {useEffect, useMemo, useRef} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import {OrbitControls} from '@react-three/drei'
 import {useMaterials} from './materials'
 import {Piece, type PieceConfig, type PieceType} from './pieces'
 import {GameProvider, useGame} from "./context.tsx";
 import {toast} from "sonner";
 import type {OrbitControls as OrbitControlsImpl} from 'three-stdlib'
+import type {ThreeEvent} from '@react-three/fiber'
+import {toChessNotation} from "@/lib/utils.ts";
 
-function Board({ mats }: { mats: ReturnType<typeof useMaterials> }) {
+function Board({ mats, onSquareClick }: { mats: ReturnType<typeof useMaterials>, onSquareClick: (row: number, col: number) => void }) {
   const TILE = 1
   const squares = useMemo(() => {
     const out = []
@@ -23,6 +25,7 @@ function Board({ mats }: { mats: ReturnType<typeof useMaterials> }) {
           key={`${r}-${c}`}
           position={[c * TILE - 3.5, 0, r * TILE - 3.5]}
           material={light ? mats.lightSquare : mats.darkSquare}
+          onClick={() => onSquareClick(r, c)}
           receiveShadow
         >
           <boxGeometry args={[TILE, 0.08, TILE]} />
@@ -35,8 +38,24 @@ function Board({ mats }: { mats: ReturnType<typeof useMaterials> }) {
 function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
   const { selectedPiece, setSelectedPiece, game } = useGame()
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
+  const [, setMoveVersion] = useState(0)
   const gameState = game.exportJson()
   const turn = gameState.turn
+
+  const handleSquareClick = (row: number, col: number) => {
+    const to = toChessNotation(col, row);
+
+    if (selectedPiece) {
+      const from = toChessNotation(selectedPiece.col, selectedPiece.row);
+      try {
+        game.move(from, to)
+        setSelectedPiece(null)
+        setMoveVersion((v) => v + 1)
+      } catch (err: unknown) {
+        toast.error(`Invalid move ${err}`)
+      }
+    }
+  }
 
   const isSameSquare = (a: PieceConfig | null, b: PieceConfig) => {
     if (!a) return false
@@ -79,7 +98,7 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
         target={[0, 0, 0]}
       />
       <group>
-        <Board mats={mats} />
+        <Board mats={mats} onSquareClick={handleSquareClick} />
         {pieces.map((p) => (
           <Piece
             key={`${p.color}-${p.type}-${p.col}-${p.row}`}
@@ -87,15 +106,20 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
             mats={mats}
             isSelected={isSameSquare(selectedPiece, p)}
             hoverable={p.color === turn}
-            onClick={() => {
-              if (p.color !== turn) {
-                console.log(p)
-                toast.error("Not your turn")
-              } else {
-                setSelectedPiece(
-                  isSameSquare(selectedPiece, p) ? null : p
-                )
+            onClick={(event: ThreeEvent<MouseEvent>) => {
+              event.stopPropagation()
+
+              if (p.color === turn) {
+                setSelectedPiece(isSameSquare(selectedPiece, p) ? null : p)
+                return
               }
+
+              if (selectedPiece) {
+                handleSquareClick(p.row, p.col)
+                return
+              }
+
+              toast.error("Not your turn")
             }}
           />
         ))}

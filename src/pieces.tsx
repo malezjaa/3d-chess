@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import type {useMaterials} from "./materials.tsx";
-import * as React from "react";
+import type {ReactNode} from "react";
 import {useRef, useState} from "react";
-import {useFrame} from "@react-three/fiber";
+import {type ThreeEvent, useFrame} from "@react-three/fiber";
 
 export function Pawn({mat}: { mat: THREE.Material }) {
   return (
@@ -32,8 +32,8 @@ export function Rook({mat}: { mat: THREE.Material }) {
       <mesh position={[0, 0.64, 0]} material={mat} castShadow>
         <cylinderGeometry args={[0.26, 0.26, 0.12, 16]}/>
       </mesh>
-      {[-0.13, 0, 0.13].map((dx, i) => (
-        <mesh key={i} position={[dx, 0.77, 0]} material={mat} castShadow>
+      {[-0.13, 0, 0.13].map((dx) => (
+        <mesh key={dx} position={[dx, 0.77, 0]} material={mat} castShadow>
           <boxGeometry args={[0.1, 0.16, 0.26]}/>
         </mesh>
       ))}
@@ -94,11 +94,11 @@ export function Queen({mat}: { mat: THREE.Material }) {
       <mesh position={[0, 0.76, 0]} material={mat} castShadow>
         <cylinderGeometry args={[0.2, 0.22, 0.12, 16]}/>
       </mesh>
-      {[0, 72, 144, 216, 288].map((deg, i) => {
+      {[0, 72, 144, 216, 288].map((deg) => {
         const a = (deg * Math.PI) / 180
         return (
           <mesh
-            key={i}
+            key={deg}
             position={[Math.cos(a) * 0.16, 0.88, Math.sin(a) * 0.16]}
             material={mat}
             castShadow
@@ -150,14 +150,14 @@ const LERP_SPEED = 12
 
 function PieceWrapper({pos, onClick, onPointerOver, onPointerOut, isSelected, isHovered, children,}: {
   pos: [number, number, number]
-  onClick?: () => void
+  onClick?: (event: ThreeEvent<MouseEvent>) => void
   onPointerOver?: () => void
   onPointerOut?: () => void
   isSelected?: boolean
   isHovered?: boolean
-  children: React.ReactNode
+  children: ReactNode
 }) {
-  const groupRef = useRef<THREE.Group>(null!)
+  const groupRef = useRef<THREE.Group | null>(null)
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
@@ -191,7 +191,7 @@ export function Piece({config, mats, isSelected, hoverable = true, onClick, onPo
   mats: ReturnType<typeof useMaterials>
   isSelected?: boolean
   hoverable?: boolean
-  onClick?: () => void
+  onClick?: (event: ThreeEvent<MouseEvent>) => void
   onPointerOver?: () => void
   onPointerOut?: () => void
 }) {
