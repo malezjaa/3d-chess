@@ -6,6 +6,7 @@ type GameContextValue = {
   selectedPiece: PieceConfig | null
   setSelectedPiece: (piece: PieceConfig | null) => void
   setGame: (game: Game) => void
+  resetGame: () => void
   game: Game
 }
 
@@ -15,8 +16,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [selectedPiece, setSelectedPiece] = useState<PieceConfig | null>(null)
   const [game, setGame] = useState(new Game())
 
+  const resetGame = () => {
+    setSelectedPiece(null)
+    setGame(new Game())
+  }
+
   return (
-    <GameContext.Provider value={{ selectedPiece, setSelectedPiece, game, setGame }}>
+    <GameContext.Provider value={{ selectedPiece, setSelectedPiece, game, setGame, resetGame }}>
       {children}
     </GameContext.Provider>
   )

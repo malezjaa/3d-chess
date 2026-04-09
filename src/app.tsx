@@ -10,13 +10,53 @@ import {toChessNotation} from "@/lib/utils.ts";
 import {Board} from "@/board.tsx";
 
 function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
-  const { selectedPiece, setSelectedPiece, game } = useGame()
+  const { selectedPiece, setSelectedPiece, game, resetGame } = useGame()
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
+  const gameFinishedHandledRef = useRef(false)
   const [, setMoveVersion] = useState(0)
   const gameState = game.exportJson()
   const turn = gameState.turn
+  const isGameFinished = gameState.isFinished
+
+  useEffect(() => {
+    if (!isGameFinished) {
+      gameFinishedHandledRef.current = false
+      return
+    }
+
+    if (gameFinishedHandledRef.current) return
+    gameFinishedHandledRef.current = true
+
+    if (gameState.checkMate) {
+      const winner = gameState.turn === 'white' ? 'Black' : 'White'
+      toast.success(`${winner} wins by checkmate!`, {
+        duration: 3000,
+      });
+
+
+    } else if (gameState.staleMate) {
+      toast.info('Draw by stalemate.', {
+        duration: 3000,
+      })
+    } else {
+      toast.info('Game over.', {
+        duration: 3000,
+      })
+    }
+
+    const resetTimer = window.setTimeout(() => {
+      resetGame()
+      setMoveVersion((v) => v + 1)
+    }, 2200)
+
+    return () => {
+      window.clearTimeout(resetTimer)
+    }
+  }, [gameState.checkMate, gameState.staleMate, gameState.turn, isGameFinished, resetGame])
 
   const handleSquareClick = (row: number, col: number) => {
+    if (isGameFinished) return
+
     const to = toChessNotation(col, row);
 
     if (selectedPiece) {
@@ -102,6 +142,7 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
             hoverable={p.color === turn}
             onClick={(event: ThreeEvent<MouseEvent>) => {
               event.stopPropagation()
+              if (isGameFinished) return
 
               if (p.color === turn) {
                 setSelectedPiece(isSameSquare(selectedPiece, p) ? null : p)
@@ -125,6 +166,6 @@ export default function App() {
   const mats = useMaterials()
 
   return (
-      <Scene mats={mats} />
+    <Scene mats={mats} />
   )
 }

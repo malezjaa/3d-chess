@@ -20,6 +20,6 @@ createRoot(document.getElementById('root')!).render(
         </div>
       </div>
     </GameProvider>
-    <Toaster/>
+    <Toaster position={"bottom-center"}/>
   </>
 )

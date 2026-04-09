@@ -198,7 +198,7 @@ export function Piece({config, mats, isSelected, hoverable = true, onClick, onPo
   const [hovered, setHovered] = useState(false)
 
   const mat = config.color === 'white' ? mats.white : mats.black
-  const pos: [number, number, number] = [config.col - 3.5, 0.04, config.row - 3.5]
+  const pos: [number, number, number] = [3.5 - config.col, 0.04, config.row - 3.5]
 
   const handlePointerOver = () => {
     setHovered(true)

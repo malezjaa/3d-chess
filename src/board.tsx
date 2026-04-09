@@ -16,7 +16,7 @@ export function Board({ mats, onSquareClick }: { mats: ReturnType<typeof useMate
       {squares.map(({ r, c, light }) => (
         <mesh
           key={`${r}-${c}`}
-          position={[c * TILE - 3.5, 0, r * TILE - 3.5]}
+          position={[3.5 - c * TILE, 0, r * TILE - 3.5]}
           material={light ? mats.lightSquare : mats.darkSquare}
           onClick={() => onSquareClick(r, c)}
           receiveShadow
