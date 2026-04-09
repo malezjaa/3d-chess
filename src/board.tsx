@@ -1,4 +1,5 @@
 import {useMaterials} from "@/materials.tsx";
+import {useMemo} from "react";
 
 export function Board({ mats, onSquareClick }: { mats: ReturnType<typeof useMaterials>, onSquareClick: (row: number, col: number) => void }) {
   const TILE = 1

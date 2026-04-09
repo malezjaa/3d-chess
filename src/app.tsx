@@ -2,7 +2,7 @@ import {useEffect, useMemo, useRef, useState} from 'react'
 import {OrbitControls} from '@react-three/drei'
 import {useMaterials} from './materials'
 import {Piece, type PieceConfig, type PieceType} from './pieces'
-import {GameProvider, useGame} from "./context.tsx";
+import {useGame} from "./context.tsx";
 import {toast} from "sonner";
 import type {OrbitControls as OrbitControlsImpl} from 'three-stdlib'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -22,7 +22,7 @@ function Scene({ mats }: { mats: ReturnType<typeof useMaterials> }) {
     if (selectedPiece) {
       const from = toChessNotation(selectedPiece.col, selectedPiece.row);
       try {
-        game.move(from, to)
+        game.move(from, to);
         setSelectedPiece(null)
         setMoveVersion((v) => v + 1)
       } catch (err: unknown) {
@@ -125,8 +125,6 @@ export default function App() {
   const mats = useMaterials()
 
   return (
-    <GameProvider>
       <Scene mats={mats} />
-    </GameProvider>
   )
 }
