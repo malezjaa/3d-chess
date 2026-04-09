@@ -1,7 +1,7 @@
 import {createRoot} from 'react-dom/client'
 import {Canvas} from '@react-three/fiber'
 import './index.css'
-import App from "./App.tsx";
+import App from "./app.tsx";
 import {Environment} from "@react-three/drei";
 import {Toaster} from "@/components/ui/sonner.tsx";
 

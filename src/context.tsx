@@ -1,4 +1,4 @@
-import {createContext, type ReactNode, useContext, useEffect, useState} from 'react'
+import {createContext, type ReactNode, useContext, useState} from 'react'
 import type {PieceConfig} from './pieces'
 import {Game} from "js-chess-engine";
 
@@ -14,10 +14,6 @@ const GameContext = createContext<GameContextValue | null>(null)
 export function GameProvider({ children }: { children: ReactNode }) {
   const [selectedPiece, setSelectedPiece] = useState<PieceConfig | null>(null)
   const [game, setGame] = useState(new Game())
-
-  useEffect(() => {
-    console.log(selectedPiece)
-  }, [selectedPiece])
 
   return (
     <GameContext.Provider value={{ selectedPiece, setSelectedPiece, game, setGame }}>
